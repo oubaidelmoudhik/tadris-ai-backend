@@ -41,25 +41,22 @@ COPY . .
 EXPOSE 8000
 
 # Run development server
-CMD ["python", "manage.py", "runserver", "0.0.00"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0"]
 
 # --------------------------------------------
 # Production build stage
 # --------------------------------------------
 FROM base AS production
 
+# Copy source code
+COPY . .
+
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
 
-# Copy source code
-COPY --chown=appuser:appuser . .
-
-# Run database migrations
-RUN python manage.py migrate --noinput
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
 
 # Switch to non-root user
 USER appuser
@@ -69,7 +66,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/')" || exit 1
 
-# Run with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "config.wsgi:application"]
+# Run entrypoint script (migrations + gunicorn)
+ENTRYPOINT ["/app/entrypoint.sh"]
