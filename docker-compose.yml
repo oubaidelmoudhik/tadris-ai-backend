@@ -1,0 +1,64 @@
+# ============================================
+# Docker Compose - Production Configuration
+# ============================================
+
+services:
+  # --------------------------------------------
+  # PostgreSQL Database
+  # --------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: raida-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: raida
+      POSTGRES_USER: raida_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raida_user -d raida"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------
+  # Django Backend
+  # --------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: raida-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://raida_user:${POSTGRES_PASSWORD}@postgres:5432/raida
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CORS_ALLOW_ALL_ORIGINS=True
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TEACHER_SUBJECT=${TEACHER_SUBJECT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_media:/app/media
+      - backend_static:/app/staticfiles
+      - backend_pdfs:/app/output_pdfs
+
+# --------------------------------------------
+# Volumes
+# --------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+  backend_media:
+    driver: local
+  backend_static:
+    driver: local
+  backend_pdfs:
+    driver: local
