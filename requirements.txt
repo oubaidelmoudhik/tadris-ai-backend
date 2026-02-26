@@ -1,0 +1,22 @@
+# Django
+django
+djangorestframework
+django-cors-headers
+djangorestframework-simplejwt
+gunicorn
+psycopg2-binary
+dj-database-url
+
+# Core
+playwright
+pandas
+openai
+python-pptx
+Jinja2
+python-dotenv
+Pillow
+
+# Testing
+pytest
+pytest-django
+pytest-cov
