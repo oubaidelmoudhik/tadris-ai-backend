@@ -33,12 +33,14 @@ services:
     container_name: raida-backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "80:8000"
+    cap_add:
+      - NET_BIND_SERVICE
     environment:
       - DEBUG=False
       - DATABASE_URL=postgresql://raida_user:${POSTGRES_PASSWORD}@postgres:5432/raida
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,44.201.136.116,ec2-44-201-136-116.compute-1.amazonaws.com
       - CORS_ALLOW_ALL_ORIGINS=True
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TEACHER_SUBJECT=${TEACHER_SUBJECT}
