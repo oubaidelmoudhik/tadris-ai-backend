@@ -47,7 +47,6 @@ services:
         condition: service_healthy
     volumes:
       - backend_media:/app/media
-      - backend_static:/app/staticfiles
       - backend_pdfs:/app/output_pdfs
 
   # --------------------------------------------
@@ -63,9 +62,6 @@ services:
       - "80:80"
     depends_on:
       - backend
-    volumes:
-      - backend_static:/app/staticfiles:ro
-      - backend_media:/app/media:ro
 
 # --------------------------------------------
 # Volumes
@@ -74,8 +70,6 @@ volumes:
   postgres_data:
     driver: local
   backend_media:
-    driver: local
-  backend_static:
     driver: local
   backend_pdfs:
     driver: local

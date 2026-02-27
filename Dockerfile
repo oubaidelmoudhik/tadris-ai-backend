@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # --------------------------------------------
-# Development stage (optional, for debugging)
+# Development stage
 # --------------------------------------------
 FROM base AS development
 
@@ -51,9 +51,16 @@ FROM base AS production
 # Copy source code
 COPY . .
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash appuser && \
+# Create directories
+RUN mkdir -p /app/staticfiles /app/media /app/output_pdfs
+
+# Run migrations and collectstatic as root first
+RUN python manage.py migrate --noinput && \
+    python manage.py collectstatic --noinput && \
     chown -R appuser:appuser /app
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
 
 # Make entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
@@ -68,5 +75,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/')" || exit 1
 
-# Run entrypoint script (migrations + gunicorn)
+# Run entrypoint script (just gunicorn now)
 ENTRYPOINT ["/app/entrypoint.sh"]

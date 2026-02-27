@@ -1,17 +1,13 @@
 #!/bin/bash
 set -e
 
-# Create necessary directories with proper permissions
-mkdir -p /app/staticfiles /app/media /app/output_pdfs
-chown -R appuser:appuser /app
-
-# Run database migrations
-echo "Running database migrations..."
-python manage.py migrate --noinput
-
-# Collect static files (for Django admin and static assets)
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+# Fix volume permissions - ensure staticfiles directory is writable
+# This handles the case where the volume is mounted but owned by root
+if [ -d /app/staticfiles ] && [ "$(stat -c '%U' /app/staticfiles)" != "appuser" ]; then
+    echo "Fixing staticfiles permissions..."
+    sudo chown -R appuser:appuser /app/staticfiles 2>/dev/null || \
+    chown -R appuser:appuser /app/staticfiles 2>/dev/null || true
+fi
 
 # Start Gunicorn
 echo "Starting Gunicorn..."
