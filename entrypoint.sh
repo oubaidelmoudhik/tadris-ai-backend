@@ -17,12 +17,13 @@ while True:
 echo "Running database migrations..."
 python manage.py migrate --noinput
 
-# Collect static files with error handling
+# Fix permissions - run collectstatic as root first, then fix ownership
 echo "Collecting static files..."
-python manage.py collectstatic --noinput 2>/dev/null || echo "Warning: collectstatic may have failed, continuing..."
-
-# Fix permissions on staticfiles
-chmod -R 755 /app/staticfiles 2>/dev/null || true
+mkdir -p /app/staticfiles
+chmod 755 /app/staticfiles
+python manage.py collectstatic --noinput --clear
+chmod -R 755 /app/staticfiles
+chown -R appuser:appuser /app
 
 # Start Gunicorn
 echo "Starting Gunicorn..."
