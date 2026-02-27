@@ -54,11 +54,6 @@ COPY . .
 # Create directories
 RUN mkdir -p /app/staticfiles /app/media /app/output_pdfs
 
-# Run migrations and collectstatic as root first
-RUN python manage.py migrate --noinput && \
-    python manage.py collectstatic --noinput && \
-    chown -R appuser:appuser /app
-
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash appuser
 
@@ -75,5 +70,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/')" || exit 1
 
-# Run entrypoint script (just gunicorn now)
+# Run entrypoint script (migrations + collectstatic + gunicorn)
 ENTRYPOINT ["/app/entrypoint.sh"]
