@@ -54,14 +54,8 @@ COPY . .
 # Create directories
 RUN mkdir -p /app/staticfiles /app/media /app/output_pdfs
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash appuser
-
 # Make entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
-
-# Switch to non-root user
-USER appuser
 
 # Expose port
 EXPOSE 8000
