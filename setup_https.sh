@@ -8,6 +8,7 @@ set -e
 
 DOMAIN="ec2-44-201-154-86.compute-1.amazonaws.com"
 EMAIL="your-email@example.com"  # Replace with your email
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "========================================"
 echo "HTTPS Setup for $DOMAIN"
@@ -37,7 +38,7 @@ mkdir -p /etc/letsencrypt/live/$DOMAIN
 
 # Stop any running nginx container
 echo "[3/5] Stopping nginx container..."
-cd /home/ubuntu/raida-concept/backend
+cd "$PROJECT_DIR"
 docker compose down || docker-compose down || true
 
 # Get SSL certificate (standalone mode)
