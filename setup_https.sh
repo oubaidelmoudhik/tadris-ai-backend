@@ -6,7 +6,7 @@
 
 set -e
 
-DOMAIN="ec2-44-201-136-116.compute-1.amazonaws.com"
+DOMAIN="ec2-44-201-154-86.compute-1.amazonaws.com"
 EMAIL="your-email@example.com"  # Replace with your email
 
 echo "========================================"

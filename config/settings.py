@@ -163,7 +163,7 @@ TEMP_HTML_DIR = BASE_DIR / 'temp_html'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app').split(',')
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app,https://ec2-44-201-154-86.compute-1.amazonaws.com').split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 # Django REST Framework
