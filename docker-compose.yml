@@ -38,7 +38,7 @@ services:
       - DEBUG=False
       - DATABASE_URL=postgresql://raida_user:${POSTGRES_PASSWORD}@postgres:5432/raida
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - ALLOWED_HOSTS=localhost,127.0.0.1,196.126.16.133,ec2-196-126-16-133.compute-1.amazonaws.com,raida-nginx,backend,raida-backend
+      - ALLOWED_HOSTS=localhost,127.0.0.1,44.201.154.86,ec2-44-201-154-86.compute-1.amazonaws.com,raida-nginx,backend,raida-backend
       - CORS_ALLOW_ALL_ORIGINS=True
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TEACHER_SUBJECT=${TEACHER_SUBJECT}
