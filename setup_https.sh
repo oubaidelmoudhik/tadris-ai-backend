@@ -6,8 +6,8 @@
 
 set -e
 
-DOMAIN="ec2-44-201-154-86.compute-1.amazonaws.com"
-EMAIL="your-email@example.com"  # Replace with your email
+DOMAIN="tadris.devagency.ma"
+EMAIL="devinstitute.ma@gmail.com"  # Replace with your email
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "========================================"

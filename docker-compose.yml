@@ -38,8 +38,8 @@ services:
       - DEBUG=False
       - DATABASE_URL=postgresql://raida_user:${POSTGRES_PASSWORD}@postgres:5432/raida
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - ALLOWED_HOSTS=localhost,127.0.0.1,ec2-44-201-154-86.compute-1.amazonaws.com,tadris-ai.vercel.app
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app,https://ec2-44-201-154-86.compute-1.amazonaws.com
+      - ALLOWED_HOSTS=localhost,127.0.0.1,tadris.devagency.ma,tadris-ai.vercel.app
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app,https://tadris.devagency.ma
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TEACHER_SUBJECT=${TEACHER_SUBJECT}
     depends_on:
