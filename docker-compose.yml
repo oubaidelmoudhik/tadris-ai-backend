@@ -38,6 +38,7 @@ services:
       - DEBUG=${DEBUG:-False}
       - CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE:-True}
       - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-True}
+      - CSRF_TRUSTED_ORIGINS=https://tadris.devagency.ma,https://tadris-ai.vercel.app
       - DATABASE_URL=postgresql://raida_user:${POSTGRES_PASSWORD}@postgres:5432/raida
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - ALLOWED_HOSTS=localhost,127.0.0.1,tadris.devagency.ma,tadris-ai.vercel.app
