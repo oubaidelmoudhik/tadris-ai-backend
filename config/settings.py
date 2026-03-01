@@ -162,6 +162,12 @@ TEMP_HTML_DIR = BASE_DIR / 'temp_html'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# CSRF & Session Cookie Settings for HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+SECURE_SSL_REDIRECT = False  # Let nginx handle SSL redirect
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app,https://tadris.devagency.ma').split(',')
 CORS_ALLOW_CREDENTIALS = True
