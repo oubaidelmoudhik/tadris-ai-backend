@@ -166,6 +166,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True') == 'True'
 SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True') == 'True'
 CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://tadris.devagency.ma,https://tadris-ai.vercel.app').split(',')
 SECURE_SSL_REDIRECT = False  # Let nginx handle SSL redirect
 
 # CORS settings
