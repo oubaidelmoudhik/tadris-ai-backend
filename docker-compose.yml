@@ -15,7 +15,7 @@ services:
       POSTGRES_USER: raida_user
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U raida_user -d raida"]
       interval: 10s
@@ -49,8 +49,8 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - backend_media:/app/media
-      - backend_pdfs:/app/output_pdfs
+      - ./media:/app/media
+      - ./output_pdfs:/app/output_pdfs
 
   # --------------------------------------------
   # Nginx Reverse Proxy (with HTTPS)
@@ -72,10 +72,4 @@ services:
 # --------------------------------------------
 # Volumes
 # --------------------------------------------
-volumes:
-  postgres_data:
-    driver: local
-  backend_media:
-    driver: local
-  backend_pdfs:
-    driver: local
+# Data is now stored in local folders (persists after rebuild)
