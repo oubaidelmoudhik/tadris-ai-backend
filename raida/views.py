@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -22,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
-from .models import Lesson, GeneratedPDF, TeacherInfo
+from .models import Lesson, GeneratedPDF, TeacherInfo, UserProfile
 from .serializers import (
     LessonSerializer, GeneratedPDFSerializer, TeacherInfoSerializer,
     UserSerializer, RegisterSerializer, LoginSerializer
@@ -31,6 +32,40 @@ from .services.pptx_service import extract_metadata_from_filename, extract_text_
 from .services.ai_service import process_with_ai
 from .services.pdf_service import generate_pdf_from_lesson_data, schedule_pdf_deletion
 from .services.cache_service import get_cache_stats, clear_cache
+
+
+# ====================
+# Permission & Usage Tracking Utilities
+# ====================
+
+def can_generate_pdf(user):
+    """
+    Permission gate for PDF generation.
+    Currently always returns True - future monetization logic will go here.
+    """
+    # Allow if user is None (anonymous) or user is authenticated
+    # Future: check user.profile.plan and apply limits
+    if user is None:
+        return True
+    return user.is_authenticated
+
+
+def track_upload_usage(user):
+    """Track PPTX upload usage for the user."""
+    if hasattr(user, 'profile'):
+        profile = user.profile
+        profile.pptx_uploaded_count += 1
+        profile.last_upload_at = timezone.now()
+        profile.save(update_fields=['pptx_uploaded_count', 'last_upload_at'])
+
+
+def track_pdf_generation(user):
+    """Track PDF generation usage for the user."""
+    if hasattr(user, 'profile'):
+        profile = user.profile
+        profile.pdf_generated_count += 1
+        profile.last_pdf_generated_at = timezone.now()
+        profile.save(update_fields=['pdf_generated_count', 'last_pdf_generated_at'])
 
 
 # ====================
@@ -244,6 +279,10 @@ def upload_lesson(request):
             content=content
         )
     
+    # Track usage for authenticated users
+    if request.user.is_authenticated:
+        track_upload_usage(request.user)
+    
     return Response({
         "message": "Lesson uploaded and saved successfully",
         "lesson_id": lesson.id,
@@ -267,6 +306,13 @@ def generate_from_upload(request):
     POST /api/lessons/generate/
     Upload PPTX → Extract → AI → PDF
     """
+    # Check permission gate (currently always allows)
+    if not can_generate_pdf(request.user if request.user.is_authenticated else None):
+        return Response(
+            {"detail": "Generation limit reached."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     uploaded_file = request.FILES.get("file")
     if not uploaded_file:
         return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
@@ -308,6 +354,10 @@ def generate_from_upload(request):
     
     # Schedule PDF deletion
     schedule_pdf_deletion(pdf_path, delay=120)
+
+    # Track usage for authenticated users
+    if request.user.is_authenticated:
+        track_pdf_generation(request.user)
     
     return Response({
         "title": meta["title"],
@@ -323,6 +373,13 @@ def generate_from_id(request, lesson_id):
     POST /api/lessons/<id>/generate/
     Generate PDF from existing lesson.
     """
+    # Check permission gate (currently always allows)
+    if not can_generate_pdf(request.user if request.user.is_authenticated else None):
+        return Response(
+            {"detail": "Generation limit reached."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     try:
         lesson = Lesson.objects.get(id=lesson_id)
     except Lesson.DoesNotExist:
@@ -350,6 +407,10 @@ def generate_from_id(request, lesson_id):
     
     # Schedule PDF deletion
     schedule_pdf_deletion(pdf_path, delay=120)
+
+    # Track usage for authenticated users
+    if request.user.is_authenticated:
+        track_pdf_generation(request.user)
 
     return Response({
         "title": lesson.title,

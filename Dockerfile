@@ -4,11 +4,27 @@
 
 FROM python:3.13-slim AS base
 
-# Install system dependencies
+# Install system dependencies (including Playwright/Chromium for PDF generation)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc-dev \
     libpq-dev \
+    libglib2.0-0 \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
@@ -25,6 +41,10 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
+
+# Install Playwright and Chromium browser for PDF generation
+RUN pip install --no-cache-dir playwright && \
+    python -m playwright install chromium
 
 # --------------------------------------------
 # Development stage

@@ -45,6 +45,41 @@ class TeacherInfo(models.Model):
         return f"Teacher Info for {self.user.username}"
 
 
+class UserProfile(models.Model):
+    """Model for tracking user usage and monetization - separate from TeacherInfo."""
+    
+    PLAN_CHOICES = [
+        ("free", "Free"),
+        ("pro", "Pro"),
+        ("admin", "Admin"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+
+    # Monetization foundation
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default="free")
+
+    # Usage tracking
+    pdf_generated_count = models.IntegerField(default=0)
+    pptx_uploaded_count = models.IntegerField(default=0)
+
+    # Analytics tracking
+    last_pdf_generated_at = models.DateTimeField(null=True, blank=True)
+    last_upload_at = models.DateTimeField(null=True, blank=True)
+
+    # Soft control flags (future use)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'User Profiles'
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
+
+
 class Lesson(models.Model):
     """Model representing a lesson extracted from PPTX."""
     
