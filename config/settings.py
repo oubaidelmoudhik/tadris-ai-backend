@@ -163,8 +163,8 @@ TEMP_HTML_DIR = BASE_DIR / 'temp_html'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CSRF & Session Cookie Settings for HTTPS
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True') == 'True'
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True') == 'True'
 CSRF_COOKIE_HTTPONLY = True
 SECURE_SSL_REDIRECT = False  # Let nginx handle SSL redirect
 
