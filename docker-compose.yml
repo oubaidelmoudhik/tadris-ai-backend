@@ -62,7 +62,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ssl_certs:/etc/letsencrypt
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
 
@@ -75,6 +75,4 @@ volumes:
   backend_media:
     driver: local
   backend_pdfs:
-    driver: local
-  ssl_certs:
     driver: local
