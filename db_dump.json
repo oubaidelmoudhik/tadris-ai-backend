@@ -404,7 +404,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 1,
     "fields": {
       "object_id": "2",
@@ -417,7 +417,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 2,
     "fields": {
       "object_id": "2",
@@ -430,7 +430,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 3,
     "fields": {
       "object_id": "2",
@@ -443,7 +443,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 4,
     "fields": {
       "object_id": "2",
@@ -456,7 +456,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 5,
     "fields": {
       "object_id": "6",
@@ -469,7 +469,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 6,
     "fields": {
       "object_id": "5",
@@ -482,7 +482,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 7,
     "fields": {
       "object_id": "4",
@@ -495,7 +495,7 @@
     }
   },
   {
-    "model": "django.admin_log",
+    "model": "admin.logentry",
     "pk": 8,
     "fields": {
       "object_id": "3",
@@ -508,7 +508,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 1,
     "fields": {
       "app_label": "admin",
@@ -516,7 +516,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 2,
     "fields": {
       "app_label": "auth",
@@ -524,7 +524,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 3,
     "fields": {
       "app_label": "auth",
@@ -532,7 +532,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 4,
     "fields": {
       "app_label": "auth",
@@ -540,7 +540,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 5,
     "fields": {
       "app_label": "contenttypes",
@@ -548,7 +548,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 6,
     "fields": {
       "app_label": "sessions",
@@ -556,7 +556,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 7,
     "fields": {
       "app_label": "raida",
@@ -564,7 +564,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 8,
     "fields": {
       "app_label": "raida",
@@ -572,7 +572,7 @@
     }
   },
   {
-    "model": "django.content_type",
+    "model": "contenttypes.contenttype",
     "pk": 9,
     "fields": {
       "app_label": "raida",
@@ -580,187 +580,7 @@
     }
   },
   {
-    "model": "django.migrations",
-    "pk": 1,
-    "fields": {
-      "app": "contenttypes",
-      "name": "0001_initial",
-      "applied": "2026-02-24 20:43:45.104439"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 2,
-    "fields": {
-      "app": "auth",
-      "name": "0001_initial",
-      "applied": "2026-02-24 20:43:45.152081"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 3,
-    "fields": {
-      "app": "admin",
-      "name": "0001_initial",
-      "applied": "2026-02-24 20:43:45.192591"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 4,
-    "fields": {
-      "app": "admin",
-      "name": "0002_logentry_remove_auto_add",
-      "applied": "2026-02-24 20:43:45.222093"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 5,
-    "fields": {
-      "app": "admin",
-      "name": "0003_logentry_add_action_flag_choices",
-      "applied": "2026-02-24 20:43:45.243641"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 6,
-    "fields": {
-      "app": "contenttypes",
-      "name": "0002_remove_content_type_name",
-      "applied": "2026-02-24 20:43:45.281943"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 7,
-    "fields": {
-      "app": "auth",
-      "name": "0002_alter_permission_name_max_length",
-      "applied": "2026-02-24 20:43:45.309057"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 8,
-    "fields": {
-      "app": "auth",
-      "name": "0003_alter_user_email_max_length",
-      "applied": "2026-02-24 20:43:45.336558"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 9,
-    "fields": {
-      "app": "auth",
-      "name": "0004_alter_user_username_opts",
-      "applied": "2026-02-24 20:43:45.359078"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 10,
-    "fields": {
-      "app": "auth",
-      "name": "0005_alter_user_last_login_null",
-      "applied": "2026-02-24 20:43:45.383785"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 11,
-    "fields": {
-      "app": "auth",
-      "name": "0006_require_contenttypes_0002",
-      "applied": "2026-02-24 20:43:45.398041"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 12,
-    "fields": {
-      "app": "auth",
-      "name": "0007_alter_validators_add_error_messages",
-      "applied": "2026-02-24 20:43:45.419904"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 13,
-    "fields": {
-      "app": "auth",
-      "name": "0008_alter_user_username_max_length",
-      "applied": "2026-02-24 20:43:45.445682"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 14,
-    "fields": {
-      "app": "auth",
-      "name": "0009_alter_user_last_name_max_length",
-      "applied": "2026-02-24 20:43:45.471505"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 15,
-    "fields": {
-      "app": "auth",
-      "name": "0010_alter_group_name_max_length",
-      "applied": "2026-02-24 20:43:45.497363"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 16,
-    "fields": {
-      "app": "auth",
-      "name": "0011_update_proxy_permissions",
-      "applied": "2026-02-24 20:43:45.520060"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 17,
-    "fields": {
-      "app": "auth",
-      "name": "0012_alter_user_first_name_max_length",
-      "applied": "2026-02-24 20:43:45.545682"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 19,
-    "fields": {
-      "app": "sessions",
-      "name": "0001_initial",
-      "applied": "2026-02-24 20:43:45.755370"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 24,
-    "fields": {
-      "app": "raida",
-      "name": "0001_initial",
-      "applied": "2026-02-25 17:03:51.382273"
-    }
-  },
-  {
-    "model": "django.migrations",
-    "pk": 25,
-    "fields": {
-      "app": "raida",
-      "name": "0002_update_teacher_info_fields",
-      "applied": "2026-02-25 17:03:51.816850"
-    }
-  },
-  {
-    "model": "django.session",
+    "model": "sessions.session",
     "pk": "2w0l75xxtmqpld00hz2jm05c0bxjld82",
     "fields": {
       "session_data": ".eJxVjDkOwjAQAP-yNbKMj10nJX3eEK0vHEC2FCcV4u8oUgpoZ0bzhpn3rcx7T-u8RBhBweWXeQ7PVA8RH1zvTYRWt3Xx4kjEabuYWkyv29n-DQr3AiOgCVayTc4bilabQSsVoldsOMlAV-OQpMnaD2QpKemzIkRHKHPQiBo-X8uxNuk:1vuzJ9:1fZE_yAzN-XMzGouDf-J4D3jf_DyvTuzd7ulxy77u8g",
