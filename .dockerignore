@@ -1,0 +1,20 @@
+# Docker ignore file
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+.git/
+.gitignore
+postgres_data/
+output_pdfs/
+media/
+staticfiles/
+.env
+*.pem
