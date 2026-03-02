@@ -24,11 +24,13 @@ def get_teacher_info(language: str = "fr", subject_name: str = "") -> Dict[str, 
     from raida.models import TeacherInfo
     
     final_info = {}
+    show_logo = True
     
     # Try to get from database first
     try:
         teacher_info = TeacherInfo.objects.first()
         if teacher_info:
+            show_logo = teacher_info.show_ministry_logo
             if language == "fr":
                 # French fields
                 if teacher_info.nom:
@@ -77,6 +79,9 @@ def get_teacher_info(language: str = "fr", subject_name: str = "") -> Dict[str, 
         final_info["المادة"] = subject_name if subject_name else "الرياضيات"
     else:
         final_info["Matière"] = subject_name if subject_name else "Français"
+    
+    # Add show_ministry_logo setting
+    final_info["show_ministry_logo"] = show_logo
         
     return final_info
 

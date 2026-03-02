@@ -495,6 +495,9 @@ def teacher_info(request):
         teacher_info.ppr = fr_data.get('PPR', '') or ar_data.get('رقم التأجير', '')
         teacher_info.annee_scolaire = fr_data.get('Année Scolaire', '') or ar_data.get('السنة الدراسية', '')
         
+        # Toggle setting
+        teacher_info.show_ministry_logo = data.get('show_ministry_logo', True)
+        
         teacher_info.save()
         
         return Response({"message": "Info updated successfully"})

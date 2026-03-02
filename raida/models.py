@@ -36,6 +36,9 @@ class TeacherInfo(models.Model):
     etablissement_ar = models.CharField(max_length=255, blank=True, default="")
     niveau_ar = models.CharField(max_length=100, blank=True, default="")
     
+    # Settings
+    show_ministry_logo = models.BooleanField(default=True)
+    
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:

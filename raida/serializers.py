@@ -89,6 +89,7 @@ class TeacherInfoSerializer(serializers.ModelSerializer):
             'ppr', 'annee_scolaire',
             'nom', 'etablissement', 'niveau',
             'nom_ar', 'etablissement_ar', 'niveau_ar',
+            'show_ministry_logo',
             'updated_at'
         ]
         read_only_fields = ['user', 'updated_at']

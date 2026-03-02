@@ -3,13 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Séance {{ lesson_data.session }} - Période {{ lesson_data.period }}</title>
+    <title>
+      Séance {{ lesson_data.session }} - Période {{ lesson_data.period }}
+    </title>
     <style>
       :root {
         --clr-dark: #495057;
         --clr-light: #dee2e6;
+        --clr-white: #ffffff;
         --radius: 20px;
         --padding-12: 12px;
+        --padding-10: 10px;
+        --font-size-title: 1.5rem;
+        --font-size-small: 11px;
+        --gap-sm: 5px;
+        --gap-md: 8px;
+        --gap-lg: 15px;
       }
       * {
         box-sizing: border-box;
@@ -38,7 +47,7 @@
         justify-content: space-between;
         gap: 30px;
       }
-      
+
       .header-left,
       .header-right {
         flex: 1;
@@ -83,19 +92,19 @@
         flex-direction: column;
         gap: 17px;
       }
-      
+
       .main-section {
         display: flex;
         flex-direction: column;
         gap: 5px;
       }
-      
+
       .main-section-heading {
         background-color: var(--clr-dark);
         border-radius: var(--radius);
         padding: 10px;
       }
-      
+
       .main-section > div:last-child {
         background-color: var(--clr-light);
         color: var(--clr-dark);
@@ -107,24 +116,55 @@
       .top-info-container {
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: var(--gap-lg);
       }
 
       .mindmap-title {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--gap-md);
         background-color: var(--clr-dark);
         color: var(--clr-light);
-        padding: 10px;
+        padding: var(--padding-10);
         border-radius: var(--radius);
         text-align: center;
-        font-size: 1.5rem;
+        font-size: var(--font-size-title);
         font-weight: bold;
         width: 100%;
+      }
+
+      .mindmap-title-left {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+      }
+
+      .mindmap-title-right {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .mindmap-title-right.hidden {
+        display: none;
+      }
+
+      .mindmap-title-left.full-width {
+        flex: 1;
+      }
+
+      .ministry-logo {
+        max-height: 57.5px;
+        max-width: 138px;
+        object-fit: contain;
       }
 
       .teacher-info-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        gap: var(--padding-12);
       }
 
       .teacher-info-grid > div {
@@ -132,28 +172,47 @@
         border-radius: var(--radius);
         padding: var(--padding-12);
         display: flex;
-        gap: 8px;
+        gap: var(--gap-md);
         align-items: center;
         width: 100%;
-        font-size: 11px;
+        font-size: var(--font-size-small);
       }
-      
+
       .teacher-info-label {
-        font-weight: bold; 
+        font-weight: bold;
         opacity: 0.8;
       }
     </style>
   </head>
   <body>
     <div class="top-info-container">
-        <div class="mindmap-title">Carte Mentale</div>
-        {% if teacher_data %}
-        <div class="teacher-info-grid">
-            {% for key, value in teacher_data.items() %}
-            <div><span class="teacher-info-label">{{ key }}:</span> <span>{{ value }}</span></div>
-            {% endfor %}
+      <div class="mindmap-title">
+        <div
+          class="mindmap-title-left{% if not teacher_data.show_ministry_logo %} full-width{% endif %}"
+        >
+          Carte Mentale
+        </div>
+        {% if teacher_data.show_ministry_logo %}
+        <div class="mindmap-title-right">
+          <img
+            src="../static/ministry-logo.png"
+            alt="Ministère de l'Éducation Nationale"
+            class="ministry-logo"
+          />
         </div>
         {% endif %}
+      </div>
+      {% if teacher_data %}
+      <div class="teacher-info-grid">
+        {% for key, value in teacher_data.items() %} {% if key !=
+        'show_ministry_logo' %}
+        <div>
+          <span class="teacher-info-label">{{ key }}:</span>
+          <span>{{ value }}</span>
+        </div>
+        {% endif %} {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
     <header>
@@ -173,7 +232,8 @@
       {% for step in lesson_data.steps %}
       <div class="main-section">
         <div class="main-section-heading font-heading">
-          {{ step.icon }} {{ step.name }}{% if step.duration %}: {{ step.duration }}{% endif %}
+          {{ step.icon }} {{ step.name }}{% if step.duration %}: {{
+          step.duration }}{% endif %}
         </div>
         <div>{{ step.content }}</div>
       </div>
