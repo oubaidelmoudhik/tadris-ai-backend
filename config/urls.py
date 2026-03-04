@@ -18,10 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from raida.views import health
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('raida.urls')),
+    path('health/', health, name='health'),
 ]
 
 # Serve media files in development

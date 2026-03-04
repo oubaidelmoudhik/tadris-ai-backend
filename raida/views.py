@@ -184,6 +184,17 @@ def health_check(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health(request):
+    """
+    GET /health/
+    Health check endpoint for Docker container healthcheck.
+    Returns simple JSON response without requiring authentication.
+    """
+    return JsonResponse({"status": "ok"})
+
+
 # ====================
 # Lesson Views
 # ====================
