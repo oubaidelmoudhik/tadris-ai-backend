@@ -32,6 +32,7 @@ from .services.pptx_service import extract_metadata_from_filename, extract_text_
 from .services.ai_service import process_with_ai
 from .services.pdf_service import generate_pdf_from_lesson_data, schedule_pdf_deletion
 from .services.cache_service import get_cache_stats, clear_cache
+from .services.lesson_service import process_lesson_data
 
 
 # ====================
@@ -292,6 +293,102 @@ def upload_lesson(request):
         "period": meta["period"],
         "week": meta["week"],
         "session": meta["session"],
+    })
+
+
+# ====================
+# Upload Lesson (JSON) - Client-side extraction
+# ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_lesson_json(request):
+    """
+    POST /api/lessons/upload-json/
+    
+    Accept JSON payload with pre-extracted lesson data.
+    This endpoint is designed for client-side PPTX text extraction
+    where the frontend sends only the extracted text (not the file).
+    
+    Payload (JSON):
+    {
+        "title": "Les couleurs",
+        "subject": "français",
+        "level": "1",
+        "period": "1",
+        "week": "5",
+        "session": "2",
+        "content": "Extracted text from PPTX...",
+        "filename": "optional_filename.pptx"  (optional)
+    }
+    
+    Returns:
+    {
+        "lesson_id": 123,
+        "created": true/false,
+        "message": "Lesson created successfully" / "Lesson already exists"
+    }
+    """
+    # Validate JSON payload
+    if not request.data:
+        return Response(
+            {"error": "No JSON data provided"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    data = request.data
+    
+    # Required fields
+    required_fields = ['title', 'subject', 'level', 'period', 'week', 'session']
+    missing_fields = [f for f in required_fields if not data.get(f)]
+    
+    if missing_fields:
+        return Response(
+            {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Extract fields
+    title = data.get('title', '')
+    subject = data.get('subject', '')
+    level = data.get('level', '')
+    period = data.get('period', '')
+    week = data.get('week', '')
+    session = data.get('session', '')
+    content = data.get('content', '')
+    filename = data.get('filename')
+    
+    # Validate subject
+    valid_subjects = ['français', 'mathématiques', 'langue arabe']
+    if subject not in valid_subjects:
+        return Response(
+            {"error": f"Invalid subject. Must be one of: {', '.join(valid_subjects)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Process lesson using centralized service
+    lesson, created = process_lesson_data(
+        title=title,
+        subject=subject,
+        level=level,
+        period=period,
+        week=week,
+        session=session,
+        content=content,
+        filename=filename,
+        user=request.user,  # Associate with authenticated user
+        objective="......"
+    )
+    
+    # Track usage
+    track_upload_usage(request.user)
+    
+    return Response({
+        "lesson_id": lesson.id,
+        "created": created,
+        "message": "Lesson created successfully" if created else "Lesson already exists",
+        "title": lesson.title,
+        "subject": lesson.subject,
     })
 
 

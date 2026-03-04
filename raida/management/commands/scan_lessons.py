@@ -4,8 +4,8 @@ Management command to scan lessons folder for new PPTX files.
 import os
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from raida.models import Lesson
 from raida.services.pptx_service import extract_metadata_from_filename, extract_text_from_pptx
+from raida.services.lesson_service import process_lesson_data
 
 
 class Command(BaseCommand):
@@ -53,38 +53,36 @@ class Command(BaseCommand):
         
         self.stdout.write(f"Found {len(pptx_files)} PPTX files")
         
-        # Check each file
+        # Process each file
         imported = 0
-        skipped = 0
         
         for filename in pptx_files:
-            # Check if already exists in database
-            existing = Lesson.objects.filter(filename=filename).first()
-            if existing:
-                skipped += 1
-                self.stdout.write(f"  Skipped (exists): {filename}")
-                continue
-            
             # Extract metadata and content
             pptx_path = os.path.join(lessons_path, filename)
             metadata = extract_metadata_from_filename(filename)
             content = extract_text_from_pptx(pptx_path)
             
-            self.stdout.write(f"  New: {filename}")
+            self.stdout.write(f"  Processing: {filename}")
             self.stdout.write(f"    Subject: {metadata['subject']}, Level: {metadata['level']}, Period: {metadata['period']}, Week: {metadata['week']}, Session: {metadata['session']}")
             
             if not dry_run:
-                Lesson.objects.create(
+                # Use centralized lesson service for deduplication
+                lesson, created = process_lesson_data(
                     title=metadata['title'],
                     subject=metadata['subject'],
                     level=metadata['level'],
                     period=metadata['period'],
                     week=metadata['week'],
                     session=metadata['session'],
-                    filename=filename,
-                    objective="......",
-                    content=content
+                    content=content,
+                    filename=filename,  # Original filename stored for reference
+                    objective="......"
                 )
+                
+                if created:
+                    self.stdout.write(f"    ✓ Created new lesson (ID: {lesson.id})")
+                else:
+                    self.stdout.write(f"    → Updated existing lesson (ID: {lesson.id})")
                 
                 # Delete processed file if flag is set
                 if delete_processed:
@@ -98,8 +96,7 @@ class Command(BaseCommand):
         
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(f"Summary:"))
-        self.stdout.write(f"  New imports: {imported}")
-        self.stdout.write(f"  Skipped (already exist): {skipped}")
+        self.stdout.write(f"  Processed: {imported}")
         
         if dry_run:
             self.stdout.write(self.style.WARNING("Dry run - no changes made"))
