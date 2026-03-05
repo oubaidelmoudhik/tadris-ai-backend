@@ -548,7 +548,7 @@ def generate_from_upload(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def generate_from_id(request, lesson_id):
     """
     POST /api/lessons/<id>/generate/
@@ -590,14 +590,8 @@ def generate_from_id(request, lesson_id):
     schedule_pdf_deletion(pdf_path, delay=120)
 
     # Use authenticated user for GeneratedPDF and tracking
-    from django.contrib.auth.models import User
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        user = User.objects.get_or_create(
-            username='default',
-            defaults={'email': 'default@example.com'}
-        )[0]
+    # Since we're using IsAuthenticated, request.user is always the authenticated user
+    user = request.user
     
     # Create GeneratedPDF record
     try:
