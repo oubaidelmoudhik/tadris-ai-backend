@@ -56,30 +56,44 @@ def can_generate_pdf(user):
 
 def track_upload_usage(user):
     """Track PPTX upload usage for the user."""
-    if user is None or not user.is_authenticated:
-        logger.debug("track_upload_usage: user is None or not authenticated")
+    logger.info(f"track_upload_usage called with user: {user}")
+    if user is None:
+        logger.warning("track_upload_usage: user is None")
+        return
+    if not hasattr(user, 'is_authenticated'):
+        logger.warning("track_upload_usage: user has no is_authenticated attribute")
+        return
+    if not user.is_authenticated:
+        logger.warning(f"track_upload_usage: user {user} is not authenticated")
         return
     try:
-        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile, created = UserProfile.objects.get_or_create(user=user)
         profile.pptx_uploaded_count += 1
         profile.last_upload_at = timezone.now()
         profile.save(update_fields=['pptx_uploaded_count', 'last_upload_at'])
-        logger.info(f"Tracked upload for user {user.username}: count={profile.pptx_uploaded_count}")
+        logger.info(f"Tracked upload for user {user.username}: count={profile.pptx_uploaded_count} (created={created})")
     except Exception as e:
         logger.error(f"Error tracking upload usage for user {user.username}: {e}")
 
 
 def track_pdf_generation(user):
     """Track PDF generation usage for the user."""
-    if user is None or not user.is_authenticated:
-        logger.debug("track_pdf_generation: user is None or not authenticated")
+    logger.info(f"track_pdf_generation called with user: {user}")
+    if user is None:
+        logger.warning("track_pdf_generation: user is None")
+        return
+    if not hasattr(user, 'is_authenticated'):
+        logger.warning("track_pdf_generation: user has no is_authenticated attribute")
+        return
+    if not user.is_authenticated:
+        logger.warning(f"track_pdf_generation: user {user} is not authenticated")
         return
     try:
-        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile, created = UserProfile.objects.get_or_create(user=user)
         profile.pdf_generated_count += 1
         profile.last_pdf_generated_at = timezone.now()
         profile.save(update_fields=['pdf_generated_count', 'last_pdf_generated_at'])
-        logger.info(f"Tracked PDF generation for user {user.username}: count={profile.pdf_generated_count}")
+        logger.info(f"Tracked PDF generation for user {user.username}: count={profile.pdf_generated_count} (created={created})")
     except Exception as e:
         logger.error(f"Error tracking PDF generation for user {user.username}: {e}")
 
@@ -478,6 +492,40 @@ def generate_from_upload(request):
     # Schedule PDF deletion
     schedule_pdf_deletion(pdf_path, delay=120)
 
+    # Get or create user for tracking (handles both authenticated and anonymous)
+    from django.contrib.auth.models import User
+    user = request.user if request.user.is_authenticated else User.objects.get_or_create(
+        username='anonymous',
+        defaults={'email': 'anonymous@example.com'}
+    )[0]
+    
+    # Get or create lesson for the PDF record
+    lesson, _ = Lesson.objects.get_or_create(
+        title=meta["title"],
+        defaults={
+            'subject': meta["subject"],
+            'level': meta["level"],
+            'period': meta["period"],
+            'week': meta["week"],
+            'session': meta["session"],
+            'filename': uploaded_file.name,
+            'content': content,
+            'user': user,
+        }
+    )
+    
+    # Create GeneratedPDF record
+    try:
+        generated_pdf = GeneratedPDF.objects.create(
+            user=user,
+            lesson=lesson,
+            file=pdf_path,
+            filename=pdf_filename
+        )
+        logger.info(f"Created GeneratedPDF record: id={generated_pdf.id}, file={pdf_filename}")
+    except Exception as e:
+        logger.error(f"Error creating GeneratedPDF record: {e}")
+    
     # Track usage for authenticated users
     if request.user.is_authenticated:
         track_pdf_generation(request.user)
@@ -530,6 +578,25 @@ def generate_from_id(request, lesson_id):
     
     # Schedule PDF deletion
     schedule_pdf_deletion(pdf_path, delay=120)
+
+    # Get or create user for tracking (handles both authenticated and anonymous)
+    from django.contrib.auth.models import User
+    user = request.user if request.user.is_authenticated else User.objects.get_or_create(
+        username='anonymous',
+        defaults={'email': 'anonymous@example.com'}
+    )[0]
+    
+    # Create GeneratedPDF record
+    try:
+        generated_pdf = GeneratedPDF.objects.create(
+            user=user,
+            lesson=lesson,
+            file=pdf_path,
+            filename=pdf_filename
+        )
+        logger.info(f"Created GeneratedPDF record: id={generated_pdf.id}, file={pdf_filename}")
+    except Exception as e:
+        logger.error(f"Error creating GeneratedPDF record: {e}")
 
     # Track usage for authenticated users
     if request.user.is_authenticated:
