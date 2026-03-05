@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Lesson, GeneratedPDF, TeacherInfo
+from .models import Lesson, GeneratedPDF, TeacherInfo, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -38,6 +38,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         # Create empty TeacherInfo for the user
         TeacherInfo.objects.create(user=user)
+        # Create UserProfile for the user
+        UserProfile.objects.create(user=user)
         return user
 
 

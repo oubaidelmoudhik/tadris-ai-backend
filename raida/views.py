@@ -53,20 +53,22 @@ def can_generate_pdf(user):
 
 def track_upload_usage(user):
     """Track PPTX upload usage for the user."""
-    if hasattr(user, 'profile'):
-        profile = user.profile
-        profile.pptx_uploaded_count += 1
-        profile.last_upload_at = timezone.now()
-        profile.save(update_fields=['pptx_uploaded_count', 'last_upload_at'])
+    if user is None:
+        return
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile.pptx_uploaded_count += 1
+    profile.last_upload_at = timezone.now()
+    profile.save(update_fields=['pptx_uploaded_count', 'last_upload_at'])
 
 
 def track_pdf_generation(user):
     """Track PDF generation usage for the user."""
-    if hasattr(user, 'profile'):
-        profile = user.profile
-        profile.pdf_generated_count += 1
-        profile.last_pdf_generated_at = timezone.now()
-        profile.save(update_fields=['pdf_generated_count', 'last_pdf_generated_at'])
+    if user is None:
+        return
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile.pdf_generated_count += 1
+    profile.last_pdf_generated_at = timezone.now()
+    profile.save(update_fields=['pdf_generated_count', 'last_pdf_generated_at'])
 
 
 # ====================
