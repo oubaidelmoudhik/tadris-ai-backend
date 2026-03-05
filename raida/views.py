@@ -4,6 +4,7 @@ Migrated from Flask's app.py endpoints.
 """
 import os
 import json
+import logging
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from django.http import FileResponse, JsonResponse
@@ -34,6 +35,8 @@ from .services.pdf_service import generate_pdf_from_lesson_data, schedule_pdf_de
 from .services.cache_service import get_cache_stats, clear_cache
 from .services.lesson_service import process_lesson_data
 
+logger = logging.getLogger(__name__)
+
 
 # ====================
 # Permission & Usage Tracking Utilities
@@ -53,22 +56,32 @@ def can_generate_pdf(user):
 
 def track_upload_usage(user):
     """Track PPTX upload usage for the user."""
-    if user is None:
+    if user is None or not user.is_authenticated:
+        logger.debug("track_upload_usage: user is None or not authenticated")
         return
-    profile, _ = UserProfile.objects.get_or_create(user=user)
-    profile.pptx_uploaded_count += 1
-    profile.last_upload_at = timezone.now()
-    profile.save(update_fields=['pptx_uploaded_count', 'last_upload_at'])
+    try:
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.pptx_uploaded_count += 1
+        profile.last_upload_at = timezone.now()
+        profile.save(update_fields=['pptx_uploaded_count', 'last_upload_at'])
+        logger.info(f"Tracked upload for user {user.username}: count={profile.pptx_uploaded_count}")
+    except Exception as e:
+        logger.error(f"Error tracking upload usage for user {user.username}: {e}")
 
 
 def track_pdf_generation(user):
     """Track PDF generation usage for the user."""
-    if user is None:
+    if user is None or not user.is_authenticated:
+        logger.debug("track_pdf_generation: user is None or not authenticated")
         return
-    profile, _ = UserProfile.objects.get_or_create(user=user)
-    profile.pdf_generated_count += 1
-    profile.last_pdf_generated_at = timezone.now()
-    profile.save(update_fields=['pdf_generated_count', 'last_pdf_generated_at'])
+    try:
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.pdf_generated_count += 1
+        profile.last_pdf_generated_at = timezone.now()
+        profile.save(update_fields=['pdf_generated_count', 'last_pdf_generated_at'])
+        logger.info(f"Tracked PDF generation for user {user.username}: count={profile.pdf_generated_count}")
+    except Exception as e:
+        logger.error(f"Error tracking PDF generation for user {user.username}: {e}")
 
 
 # ====================
@@ -596,8 +609,8 @@ def teacher_info(request):
         teacher_info.etablissement = fr_data.get('Établissement', '')
         teacher_info.niveau = fr_data.get('Niveau', '')
         
-        # Map Arabic fields
-        teacher_info.nom_ar = ar_data.get('الأستاذ', '')
+        # Map Arabic fields - handle both 'Professor' (frontend) and 'الأستاذ' keys
+        teacher_info.nom_ar = ar_data.get('الأستاذ', '') or ar_data.get('Professor', '')
         teacher_info.etablissement_ar = ar_data.get('المؤسسة', '')
         teacher_info.niveau_ar = ar_data.get('المستوى', '')
         
