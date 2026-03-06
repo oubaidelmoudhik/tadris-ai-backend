@@ -304,6 +304,9 @@ def upload_lesson(request):
         existing_lesson.week = meta["week"]
         existing_lesson.session = meta["session"]
         existing_lesson.content = content
+        # Update uploaded_by if authenticated
+        if request.user.is_authenticated:
+            existing_lesson.uploaded_by = request.user
         existing_lesson.save()
         lesson = existing_lesson
     else:
@@ -317,7 +320,8 @@ def upload_lesson(request):
             session=meta["session"],
             filename=uploaded_file.name,
             objective="......",
-            content=content
+            content=content,
+            uploaded_by=request.user if request.user.is_authenticated else None
         )
     
     # Track usage
@@ -537,6 +541,12 @@ def generate_from_upload(request):
     except Exception as e:
         logger.error(f"Error creating GeneratedPDF record: {e}")
     
+    # Update lesson tracking: increment pdf_generation_count and set last_generated_at
+    lesson.pdf_generation_count += 1
+    lesson.last_generated_at = timezone.now()
+    lesson.save(update_fields=['pdf_generation_count', 'last_generated_at'])
+    logger.info(f"Updated lesson {lesson.id}: pdf_generation_count={lesson.pdf_generation_count}")
+    
     # Track usage for all users (authenticated or default)
     track_pdf_generation(user)
     
@@ -604,6 +614,12 @@ def generate_from_id(request, lesson_id):
         logger.info(f"Created GeneratedPDF record: id={generated_pdf.id}, file={pdf_filename}, user={user.username}")
     except Exception as e:
         logger.error(f"Error creating GeneratedPDF record: {e}")
+    
+    # Update lesson tracking: increment pdf_generation_count and set last_generated_at
+    lesson.pdf_generation_count += 1
+    lesson.last_generated_at = timezone.now()
+    lesson.save(update_fields=['pdf_generation_count', 'last_generated_at'])
+    logger.info(f"Updated lesson {lesson.id}: pdf_generation_count={lesson.pdf_generation_count}")
 
     # Track usage for the user who generated the PDF
     track_pdf_generation(user)

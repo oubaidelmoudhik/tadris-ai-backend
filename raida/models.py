@@ -86,7 +86,13 @@ class UserProfile(models.Model):
 class Lesson(models.Model):
     """Model representing a lesson extracted from PPTX."""
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lessons', default=get_default_user)
+    # Optional user reference - lessons are independent once created
+    # Using SET_NULL so deleting a user doesn't delete their lessons
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='lessons', null=True, blank=True)
+    
+    # Optional upload tracking - who uploaded this lesson (if uploaded, not scanned locally)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='uploaded_lessons', null=True, blank=True)
+    
     title = models.CharField(max_length=255)
     subject = models.CharField(max_length=50, choices=Subject.choices, default=Subject.FRENCH)
     level = models.CharField(max_length=10, blank=True, default='')
@@ -103,6 +109,10 @@ class Lesson(models.Model):
     # File fields
     pptx_file = models.FileField(upload_to='lessons/', null=True, blank=True)
     
+    # PDF generation tracking
+    pdf_generation_count = models.IntegerField(default=0)
+    last_generated_at = models.DateTimeField(null=True, blank=True)
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -117,7 +127,9 @@ class Lesson(models.Model):
 class GeneratedPDF(models.Model):
     """Model representing a generated PDF for a lesson."""
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pdfs', default=get_default_user)
+    # Optional user reference - PDFs are independent once created
+    # Using SET_NULL so deleting a user doesn't delete their PDFs
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='pdfs', null=True, blank=True)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='pdfs')
     file = models.FileField(upload_to='pdfs/')
     filename = models.CharField(max_length=255)
