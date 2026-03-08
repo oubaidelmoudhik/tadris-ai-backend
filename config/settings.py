@@ -42,12 +42,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Third party
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
-    # Local
     'raida',
 ]
+
+# Append trailing slash - set to False to avoid redirect issues with CORS
+APPEND_SLASH = False
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -173,9 +175,14 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://tadris.devagency.ma,https://tadris-ai.vercel.app').split(',')
 SECURE_SSL_REDIRECT = False  # Let nginx handle SSL redirect
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app,https://tadris.devagency.ma').split(',')
+# CORS settings - allow all for production flexibility
+CORS_ALLOWED_ORIGINS = os.getenv(
+    'CORS_ALLOWED_ORIGINS', 
+    'http://localhost:3000,http://127.0.0.1:3000,https://tadris-ai.vercel.app,https://tadris.devagency.ma'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for flexibility
+CORS_EXPOSE_HEADERS = ['Content-Type', 'Authorization']
 
 # Django REST Framework
 REST_FRAMEWORK = {
