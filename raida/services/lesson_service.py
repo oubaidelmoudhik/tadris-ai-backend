@@ -8,11 +8,14 @@ that works for both:
 
 Ensures deterministic deduplication via hash-based detection.
 """
+import logging
 from typing import Optional, Tuple
 from django.contrib.auth.models import User
 
 from raida.models import Lesson
 from raida.utils.hashing import generate_lesson_hash
+
+logger = logging.getLogger(__name__)
 
 
 def process_lesson_data(
@@ -65,6 +68,13 @@ def process_lesson_data(
         ... )
         >>> print(f"Lesson {'created' if created else 'already exists'}: {lesson.id}")
     """
+    logger.info(f'[LESSON-SERVICE] Processing lesson', extra={
+        'title': title,
+        'subject': subject,
+        'level': level,
+        'content_length': len(content) if content else 0,
+    })
+
     # Generate deterministic hash from core lesson attributes
     lesson_hash = generate_lesson_hash(
         title=title,
@@ -75,6 +85,8 @@ def process_lesson_data(
         session=session
     )
     
+    logger.debug(f'[LESSON-SERVICE] Generated hash: {lesson_hash[:16]}...')
+    
     # Use hash as filename if not provided (backward-compatible storage)
     # This allows both scan_lessons and web uploads to use the same detection
     storage_filename = filename if filename else lesson_hash
@@ -84,10 +96,15 @@ def process_lesson_data(
     existing_by_hash = Lesson.objects.filter(filename=lesson_hash).first()
     
     if existing_by_hash:
+        logger.info(f'[LESSON-SERVICE] Found existing lesson by hash', extra={
+            'lesson_id': existing_by_hash.id,
+            'hash': lesson_hash[:16],
+        })
         # Update content if new content provided (allows refresh without duplicate)
         if content and content != existing_by_hash.content:
             existing_by_hash.content = content
             existing_by_hash.save(update_fields=['content', 'updated_at'])
+            logger.info(f'[LESSON-SERVICE] Updated existing lesson content')
         return (existing_by_hash, False)
     
     # Also check by exact field match as fallback (for legacy data)
@@ -101,6 +118,9 @@ def process_lesson_data(
     ).first()
     
     if existing_by_fields:
+        logger.info(f'[LESSON-SERVICE] Found existing lesson by fields', extra={
+            'lesson_id': existing_by_fields.id,
+        })
         # Update hash storage and content
         existing_by_fields.filename = lesson_hash
         if content:
@@ -124,6 +144,11 @@ def process_lesson_data(
         objective=objective,
         content=content or ""
     )
+    
+    logger.info(f'[LESSON-SERVICE] Created new lesson', extra={
+        'lesson_id': new_lesson.id,
+        'hash': lesson_hash[:16],
+    })
     
     return (new_lesson, True)
 

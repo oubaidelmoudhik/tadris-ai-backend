@@ -380,8 +380,24 @@ def upload_lesson_json(request):
         "message": "Lesson created successfully" / "Lesson already exists"
     }
     """
+    # Log request metadata
+    logger.info(f'[UPLOAD-JSON] Request from user {request.user.id}', extra={
+        'content_type': request.content_type,
+        'payload_size': len(request.data) if request.data else 0,
+        'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+    })
+
+    # Ensure JSON content type
+    if not request.content_type or not request.content_type.startswith('application/json'):
+        logger.warning(f'[UPLOAD-JSON] Invalid content type: {request.content_type}')
+        return Response(
+            {"error": "Content-Type must be application/json"},
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+        )
+
     # Validate JSON payload
     if not request.data:
+        logger.warning('[UPLOAD-JSON] No data provided')
         return Response(
             {"error": "No JSON data provided"},
             status=status.HTTP_400_BAD_REQUEST
@@ -389,11 +405,17 @@ def upload_lesson_json(request):
     
     data = request.data
     
+    logger.info(f'[UPLOAD-JSON] Received payload', extra={
+        'keys': list(data.keys()) if isinstance(data, dict) else 'not a dict',
+        'content_length': len(data.get('content', '')) if isinstance(data, dict) else 0,
+    })
+    
     # Required fields
     required_fields = ['title', 'subject', 'level', 'period', 'week', 'session']
     missing_fields = [f for f in required_fields if not data.get(f)]
     
     if missing_fields:
+        logger.warning(f'[UPLOAD-JSON] Missing fields: {missing_fields}')
         return Response(
             {"error": f"Missing required fields: {', '.join(missing_fields)}"},
             status=status.HTTP_400_BAD_REQUEST
@@ -412,10 +434,37 @@ def upload_lesson_json(request):
     # Validate subject
     valid_subjects = ['français', 'mathématiques', 'langue arabe']
     if subject not in valid_subjects:
+        logger.warning(f'[UPLOAD-JSON] Invalid subject: {subject}')
         return Response(
             {"error": f"Invalid subject. Must be one of: {', '.join(valid_subjects)}"},
             status=status.HTTP_400_BAD_REQUEST
         )
+    
+    # Validate content is not empty
+    if not content or not content.strip():
+        logger.warning('[UPLOAD-JSON] Empty content received')
+        return Response(
+            {"error": "Content cannot be empty"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Validate content size (prevent abuse)
+    if len(content) > 500000:  # 500KB limit
+        logger.warning(f'[UPLOAD-JSON] Content too large: {len(content)} bytes')
+        return Response(
+            {"error": "Content too large (max 500KB)"},
+            status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+        )
+
+    logger.info(f'[UPLOAD-JSON] Processing lesson', extra={
+        'title': title,
+        'subject': subject,
+        'level': level,
+        'period': period,
+        'week': week,
+        'session': session,
+        'content_length': len(content),
+    })
     
     # Process lesson using centralized service
     lesson, created = process_lesson_data(
@@ -433,6 +482,12 @@ def upload_lesson_json(request):
     
     # Track usage
     track_upload_usage(request.user)
+    
+    logger.info(f'[UPLOAD-JSON] Lesson processed', extra={
+        'lesson_id': lesson.id,
+        'created': created,
+        'user_id': request.user.id,
+    })
     
     return Response({
         "lesson_id": lesson.id,
