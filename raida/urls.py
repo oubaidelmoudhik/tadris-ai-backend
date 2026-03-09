@@ -22,11 +22,15 @@ urlpatterns = [
     path('lessons/upload/', views.upload_lesson, name='upload_lesson'),
     path('lessons/upload-json/', views.upload_lesson_json, name='upload_lesson_json'),
     path('lessons/generate/', views.generate_from_upload, name='generate_from_upload'),
+    path('lessons/generate-preview/', views.generate_pdf_preview, name='generate_pdf_preview'),
     path('lessons/<int:lesson_id>/generate/', views.generate_from_id, name='generate_from_id'),
     path('lessons/pdf/<str:filename>/', views.download_pdf, name='download_pdf'),
     
     # Teacher info - equivalent to Flask GET/POST /teacher-info
     path('teacher-info/', views.teacher_info, name='teacher_info'),
+    
+    # User PDF preferences
+    path('user/pdf-preferences/', views.user_pdf_preferences, name='user_pdf_preferences'),
     
     # Cache - equivalent to Flask GET /cache/stats and POST /cache/clear
     path('cache/stats/', views.cache_stats, name='cache_stats'),

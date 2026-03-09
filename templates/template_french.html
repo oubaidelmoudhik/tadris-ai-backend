@@ -8,14 +8,29 @@
     </title>
     <style>
       :root {
-        --clr-dark: #495057;
-        --clr-light: #dee2e6;
-        --clr-white: #ffffff;
+        /* Colors from template context - 6 color palette */
+        --main: {{ colors.main }};
+        --accent: {{ colors.accent }};
+        --text-light: {{ colors.text_light }};
+        --text-dark: {{ colors.text_dark }};
+        --bg-light: {{ colors.bg_light }};
+        --border: {{ colors.border }};
+        
+        /* Legacy support */
+        --primary: {{ colors.main }};
+        --text: {{ colors.text_dark }};
+        --bg: #FFFFFF;  /* Always white */
+        
+        /* Typography from template context */
+        --font-base: {{ fonts.base }};
+        --font-title: {{ fonts.title }};
+        --font-heading: {{ fonts.heading }};
+        --line-height: {{ line_height }};
+
+        --clr-light: var(--bg-light);
         --radius: 20px;
         --padding-12: 12px;
         --padding-10: 10px;
-        --font-size-title: 1.5rem;
-        --font-size-small: 11px;
         --gap-sm: 5px;
         --gap-md: 8px;
         --gap-lg: 15px;
@@ -28,17 +43,36 @@
         margin: 0.6cm;
       }
       body {
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: var(--font-base);
+        line-height: var(--line-height);
         display: flex;
         flex-direction: column;
         gap: 30px;
         font-family: "DejaVu Sans", sans-serif;
-        color: var(--clr-light);
+        color: var(--text-dark);
+        background: var(--bg);
       }
       .font-heading {
         font-weight: bold;
         text-align: center;
+      }
+
+      /* PAGE BREAK INTELLIGENCE */
+      .main-section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 15px;
+      }
+      
+      .main-section-heading {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+      
+      h1, h2, h3 {
+        break-after: avoid;
+        page-break-after: avoid;
+        color: var(--main);
       }
 
       /* ---------- HEADER ---------- */
@@ -57,8 +91,13 @@
       }
 
       header > section > div {
-        background-color: var(--clr-dark);
+        background-color: var(--main);
         padding: var(--padding-12);
+        border-radius: var(--radius);
+      }
+
+      .header-left-info > div {
+        background-color: var(--main);
         border-radius: var(--radius);
       }
 
@@ -73,7 +112,7 @@
       }
 
       .header-left-info > div {
-        background-color: var(--clr-dark);
+        background-color: var(--primary);
         border-radius: var(--radius);
         display: inline-block;
         display: flex;
@@ -82,8 +121,22 @@
         padding: var(--padding-12);
       }
 
+      .header-left-info > div span {
+        color: white;
+      }
+
+      .header-left-info > div span:first-child {
+        font-weight: bold;
+        opacity: 0.9;
+      }
+
       .header-right > div:last-child {
         flex: 1;
+        color: var(--text-dark);
+      }
+
+      .header-right .header-objectif {
+        color: var(--main);
       }
 
       /* ---------- MAIN ---------- */
@@ -100,16 +153,22 @@
       }
 
       .main-section-heading {
-        background-color: var(--clr-dark);
+        background-color: var(--main);
         border-radius: var(--radius);
         padding: 10px;
+        color: white;
+        font-size: var(--font-heading);
       }
 
       .main-section > div:last-child {
         background-color: var(--clr-light);
-        color: var(--clr-dark);
+        color: var(--text-dark);
         border-radius: 30px;
         padding: 10px 10px 17px;
+      }
+
+      .main-section > div:last-child * {
+        color: var(--text-dark);
       }
 
       /* ---------- TOP INFO ---------- */
@@ -124,12 +183,12 @@
         justify-content: center;
         align-items: center;
         gap: var(--gap-md);
-        background-color: var(--clr-dark);
-        color: var(--clr-light);
+        background-color: var(--main);
+        color: white;
         padding: var(--padding-10);
         border-radius: var(--radius);
         text-align: center;
-        font-size: var(--font-size-title);
+        font-size: var(--font-title);
         font-weight: bold;
         width: 100%;
       }
@@ -168,19 +227,26 @@
       }
 
       .teacher-info-grid > div {
-        background-color: var(--clr-dark);
+        background-color: var(--main);
         border-radius: var(--radius);
         padding: var(--padding-12);
         display: flex;
         gap: var(--gap-md);
         align-items: center;
         width: 100%;
-        font-size: var(--font-size-small);
+        font-size: var(--font-base);
+        color: white;
       }
 
       .teacher-info-label {
         font-weight: bold;
         opacity: 0.8;
+      }
+
+      /* Print optimization */
+      @media print {
+        body { padding: 5mm; }
+        .no-print { display: none; }
       }
     </style>
   </head>
@@ -224,7 +290,7 @@
         </div>
       </section>
       <section class="header-right">
-        <div class="header-objectif font-heading">🎯 Objectifs:</div>
+        <div class="header-objectif font-heading">Objectifs</div>
         <div>{{ lesson_data.objective }}</div>
       </section>
     </header>
@@ -232,7 +298,7 @@
       {% for step in lesson_data.steps %}
       <div class="main-section">
         <div class="main-section-heading font-heading">
-          {{ step.icon }} {{ step.name }}{% if step.duration %}: {{
+          {{ step.name }}{% if step.duration %}: {{
           step.duration }}{% endif %}
         </div>
         <div>{{ step.content }}</div>

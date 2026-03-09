@@ -34,6 +34,9 @@ from .services.ai_service import process_with_ai
 from .services.pdf_service import generate_pdf_from_lesson_data, schedule_pdf_deletion
 from .services.cache_service import get_cache_stats, clear_cache
 from .services.lesson_service import process_lesson_data
+from .config.color_palettes import COLOR_PALETTES
+
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -550,13 +553,16 @@ def generate_from_upload(request):
 
     # Generate PDF
     pdf_filename = f"Period{meta['period']}_Week{meta['week']}_Session{meta['session']}.pdf"
-    pdf_path = generate_pdf_from_lesson_data(lesson_data, pdf_filename)
+    result = generate_pdf_from_lesson_data(lesson_data, pdf_filename)
+    pdf_path = result.get('pdf_path') if result else None
     
     if not pdf_path:
         return Response({"error": "PDF generation failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Schedule PDF deletion
     schedule_pdf_deletion(pdf_path, delay=120)
+    if result.get('preview_path'):
+        schedule_pdf_deletion(result['preview_path'], delay=120)
 
     # Get user for tracking - use authenticated user, or default user for anonymous
     from django.contrib.auth.models import User
@@ -644,15 +650,27 @@ def generate_from_id(request, lesson_id):
     lesson.processed_content = lesson_data
     lesson.save()
 
+    # Check if user wants preview first
+    generate_preview = request.data.get('with_preview', False) if request.data else False
+    
     # Generate PDF
     pdf_filename = f"{lesson.title}.pdf"
-    pdf_path = generate_pdf_from_lesson_data(lesson_data, pdf_filename, lesson.id)
+    result = generate_pdf_from_lesson_data(
+        lesson_data, 
+        pdf_filename, 
+        lesson.id,
+        user_id=request.user.id,
+        generate_preview=generate_preview
+    )
+    pdf_path = result.get('pdf_path') if result else None
 
     if not pdf_path:
         return Response({"error": "PDF generation failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Schedule PDF deletion
     schedule_pdf_deletion(pdf_path, delay=120)
+    if result.get('preview_path'):
+        schedule_pdf_deletion(result['preview_path'], delay=120)
 
     # Use authenticated user for GeneratedPDF and tracking
     # Since we're using IsAuthenticated, request.user is always the authenticated user
@@ -679,11 +697,17 @@ def generate_from_id(request, lesson_id):
     # Track usage for the user who generated the PDF
     track_pdf_generation(user)
 
-    return Response({
+    response_data = {
         "title": lesson.title,
         "lesson_data": lesson_data,
         "pdf_path": pdf_path
-    })
+    }
+    
+    # Include preview if generated
+    if generate_preview and result.get('preview_base64'):
+        response_data['preview_base64'] = result['preview_base64']
+    
+    return Response(response_data)
 
 
 # ====================
@@ -787,3 +811,151 @@ def clear_cache_view(request):
     """POST /api/cache/clear/ - Clear cache."""
     clear_cache()
     return Response({"message": "Cache cleared successfully"})
+
+
+# ====================
+# PDF Preview & Preferences
+# ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_pdf_preview(request, lesson_id=None):
+    """
+    POST /api/lessons/generate-preview/
+    
+    Generate PDF + PNG preview without triggering download.
+    Returns base64 preview image for display in modal.
+    """
+    try:
+        # Get lesson data
+        if lesson_id:
+            lesson = Lesson.objects.get(id=lesson_id, user=request.user)
+            lesson_data = lesson.processed_content or {}
+        else:
+            # Handle upload + generate flow
+            lesson_data = request.data.get('lesson_data', {})
+        
+        if not lesson_data:
+            return Response(
+                {'error': 'No lesson data provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Generate PDF with preview
+        result = generate_pdf_from_lesson_data(
+            lesson_data=lesson_data,
+            pdf_filename=f"preview_{int(time.time())}.pdf",
+            lesson_id=lesson_id,
+            user_id=request.user.id,
+            generate_preview=True
+        )
+        
+        if not result.get('pdf_path'):
+            return Response(
+                {'error': 'Preview generation failed'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        # Schedule cleanup
+        schedule_pdf_deletion(result['pdf_path'], delay=120)
+        if result.get('preview_path'):
+            schedule_pdf_deletion(result['preview_path'], delay=120)
+        
+        return Response({
+            'success': True,
+            'preview_base64': result.get('preview_base64'),
+            'pdf_path': result['pdf_path'],
+            'message': 'Preview generated successfully',
+        })
+        
+    except Lesson.DoesNotExist:
+        return Response(
+            {'error': 'Lesson not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f'[PDF-PREVIEW] Error: {str(e)}', exc_info=True)
+        return Response(
+            {'error': f'Preview generation failed: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def user_pdf_preferences(request):
+    """
+    GET/POST /api/user/pdf-preferences/
+    
+    Get or update user's PDF color and typography preferences.
+    """
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'GET':
+        return Response({
+            'color_preset': profile.color_preset,
+            'font_size': profile.font_size,
+            'line_height': profile.line_height,
+            'available_palettes': [
+                {
+                    'id': key,
+                    'name': palette['name'],
+                    'name_fr': palette['name_fr'],
+                    'name_ar': palette['name_ar'],
+                    'main': palette['main'],
+                    'accent': palette['accent'],
+                    'text_light': palette['text_light'],
+                    'text_dark': palette['text_dark'],
+                    'bg_light': palette['bg_light'],
+                    'border': palette['border'],
+                }
+                for key, palette in COLOR_PALETTES.items()
+            ],
+            'available_fonts': [
+                {'id': key, 'name': label} 
+                for key, label in UserProfile.FONT_SIZE_CHOICES
+            ],
+            'available_line_heights': [
+                {'id': key, 'name': label} 
+                for key, label in UserProfile.LINE_HEIGHT_CHOICES
+            ],
+        })
+    
+    elif request.method == 'POST':
+        data = request.data
+        
+        # Validate and update
+        if 'color_preset' in data:
+            if data['color_preset'] not in COLOR_PALETTES:
+                return Response(
+                    {'error': f"Invalid color preset. Choose from: {list(COLOR_PALETTES.keys())}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            profile.color_preset = data['color_preset']
+        
+        if 'font_size' in data:
+            valid_font_sizes = dict(UserProfile.FONT_SIZE_CHOICES)
+            if data['font_size'] not in valid_font_sizes:
+                return Response(
+                    {'error': 'Invalid font size'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            profile.font_size = data['font_size']
+        
+        if 'line_height' in data:
+            valid_line_heights = dict(UserProfile.LINE_HEIGHT_CHOICES)
+            if data['line_height'] not in valid_line_heights:
+                return Response(
+                    {'error': 'Invalid line height'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            profile.line_height = data['line_height']
+        
+        profile.save()
+        
+        return Response({
+            'message': 'Preferences updated successfully',
+            'color_preset': profile.color_preset,
+            'font_size': profile.font_size,
+            'line_height': profile.line_height,
+        })

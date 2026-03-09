@@ -4,10 +4,12 @@ Migrated from Flask's pdf_generator.py
 """
 import os
 import json
+import base64
 from typing import Dict, Any, Optional
 from django.conf import settings
 from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import sync_playwright
+from pathlib import Path
 
 
 def get_teacher_info(language: str = "fr", subject_name: str = "") -> Dict[str, Any]:
@@ -89,19 +91,46 @@ def get_teacher_info(language: str = "fr", subject_name: str = "") -> Dict[str, 
 def generate_pdf_from_lesson_data(
     lesson_data: Dict[str, Any], 
     pdf_filename: str,
-    lesson_id: int = None
-) -> Optional[str]:
+    lesson_id: int = None,
+    user_id: int = None,
+    generate_preview: bool = False
+) -> Dict[str, Any]:
     """
-    Generate a PDF from lesson data.
+    Generate a PDF from lesson data with user preferences.
     
     Args:
         lesson_data: Dictionary with lesson_data containing steps, objective, etc.
         pdf_filename: Name for the output PDF file
         lesson_id: Optional lesson ID for database tracking
+        user_id: Optional user ID for fetching preferences
+        generate_preview: Whether to generate PNG preview
         
     Returns:
-        Path to generated PDF or None on failure
+        Dict with pdf_path, preview_path, preview_base64
     """
+    # Import color palette config
+    from raida.config.color_palettes import (
+        get_palette, 
+        get_font_config, 
+        get_line_height
+    )
+    
+    # Get user preferences (with defaults)
+    color_palette = get_palette('professional')
+    font_config = get_font_config('medium')
+    line_height = get_line_height('comfortable')
+    
+    if user_id:
+        try:
+            from raida.models import UserProfile
+            profile = UserProfile.objects.select_related('user').get(user_id=user_id)
+            color_palette = get_palette(profile.color_preset)
+            font_config = get_font_config(profile.font_size)
+            line_height = get_line_height(profile.line_height)
+            print(f"[PDF-GENERATE] Using palette: {profile.color_preset}, font: {profile.font_size}")
+        except Exception as e:
+            print(f"[PDF-GENERATE] Could not load user preferences: {e}")
+    
     # Select template based on subject
     subject = lesson_data.get("subject", "français").lower()
     
@@ -137,12 +166,18 @@ def generate_pdf_from_lesson_data(
         template_path = os.path.join(templates_dir, template_name)
         if not os.path.exists(template_path):
             print(f"❌ Fallback template also not found")
-            return None
+            return {'pdf_path': None, 'preview_path': None, 'preview_base64': None}
     
-    # Render HTML with Jinja2
+    # Render HTML with Jinja2 - include color/typography context
     env = Environment(loader=FileSystemLoader(templates_dir))
     template = env.get_template(template_name)
-    html_content = template.render(lesson_data=lesson_data, teacher_data=teacher_data)
+    html_content = template.render(
+        lesson_data=lesson_data, 
+        teacher_data=teacher_data,
+        colors=color_palette,
+        fonts=font_config,
+        line_height=line_height
+    )
     
     # Save temporary HTML file
     temp_html_dir = getattr(settings, 'TEMP_HTML_DIR', os.path.join(settings.BASE_DIR, 'temp_html'))
@@ -163,12 +198,32 @@ def generate_pdf_from_lesson_data(
             browser = p.chromium.launch(headless=True, args=["--lang=ar"])
             page = browser.new_page()
             page.goto(f"file://{os.path.abspath(html_path)}")
+            
+            # Generate PDF
             page.pdf(
                 path=pdf_path,
                 format="A4",
                 print_background=True,
                 margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"}
             )
+            
+            # Generate PNG preview if requested
+            preview_path = None
+            preview_base64 = None
+            
+            if generate_preview:
+                preview_filename = pdf_filename.replace('.pdf', '_preview.png')
+                preview_path = os.path.join(pdf_output_dir, preview_filename)
+                page.screenshot(
+                    path=preview_path,
+                    full_page=False,
+                    type='png'
+                )
+                # Convert to base64 for frontend
+                with open(preview_path, 'rb') as f:
+                    preview_base64 = base64.b64encode(f.read()).decode('utf-8')
+                print(f"[PDF-PREVIEW] Preview generated: {preview_path}")
+            
             browser.close()
         
         print(f"✅ PDF created: {pdf_path}")
@@ -179,11 +234,15 @@ def generate_pdf_from_lesson_data(
         except:
             pass
         
-        return pdf_path
+        return {
+            'pdf_path': pdf_path,
+            'preview_path': preview_path,
+            'preview_base64': preview_base64
+        }
         
     except Exception as e:
         print(f"❌ Error generating PDF: {e}")
-        return None
+        return {'pdf_path': None, 'preview_path': None, 'preview_base64': None}
 
 
 def schedule_pdf_deletion(pdf_path: str, delay: int = 120) -> None:

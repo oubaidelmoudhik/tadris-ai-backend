@@ -57,6 +57,24 @@ class UserProfile(models.Model):
         ("admin", "Admin"),
     ]
 
+    COLOR_PRESET_CHOICES = [
+        ('professional', 'Professional (Blue)'),
+        ('vibrant', 'Vibrant (Purple)'),
+        ('calm', 'Calm (Green)'),
+        ('monotone', 'Monotone (Grayscale)'),
+    ]
+
+    FONT_SIZE_CHOICES = [
+        ('small', 'Small (10px)'),
+        ('medium', 'Medium (12px)'),
+        ('large', 'Large (14px)'),
+    ]
+
+    LINE_HEIGHT_CHOICES = [
+        ('compact', 'Compact (1.3)'),
+        ('comfortable', 'Comfortable (1.6)'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
 
     # Monetization foundation
@@ -69,6 +87,26 @@ class UserProfile(models.Model):
     # Analytics tracking
     last_pdf_generated_at = models.DateTimeField(null=True, blank=True)
     last_upload_at = models.DateTimeField(null=True, blank=True)
+
+    # PDF Color preferences
+    color_preset = models.CharField(
+        max_length=20,
+        choices=COLOR_PRESET_CHOICES,
+        default='professional'
+    )
+
+    # PDF Typography preferences
+    font_size = models.CharField(
+        max_length=10,
+        choices=FONT_SIZE_CHOICES,
+        default='medium'
+    )
+
+    line_height = models.CharField(
+        max_length=15,
+        choices=LINE_HEIGHT_CHOICES,
+        default='comfortable'
+    )
 
     # Soft control flags (future use)
     is_active = models.BooleanField(default=True)
