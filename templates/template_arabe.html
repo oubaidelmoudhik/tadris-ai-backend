@@ -15,12 +15,12 @@
         --text-dark: {{ colors.text_dark }};
         --bg-light: {{ colors.bg_light }};
         --border: {{ colors.border }};
-        
+
         /* Legacy support */
         --primary: {{ colors.main }};
         --text: {{ colors.text_dark }};
         --bg: #FFFFFF;  /* Always white */
-        
+
         /* Typography from template context */
         --font-base: {{ fonts.base }};
         --font-title: {{ fonts.title }};
@@ -77,12 +77,12 @@
         page-break-inside: avoid;
         margin-bottom: 15px;
       }
-      
+
       .main-section-heading {
         break-after: avoid;
         page-break-after: avoid;
       }
-      
+
       h1, h2, h3 {
         break-after: avoid;
         page-break-after: avoid;
@@ -148,7 +148,7 @@
 
       .header-right > div:first-child {
         /* Objective title */
-        color: var(--main);
+        color: var(--text-light);
         font-weight: bold;
         font-size: var(--font-title);
       }
@@ -156,7 +156,7 @@
       .header-right > div:last-child {
         /* Objective content */
         flex: 1;
-        color: var(--text-dark);
+        color: var(--text-light);
         background-color: var(--bg-light);
         padding: 12px;
         border-radius: 10px;
@@ -332,8 +332,7 @@
       {% for step in lesson_data.steps %}
       <div class="main-section">
         <div class="main-section-heading font-heading">
-          {{ step.name }}{% if step.duration %}: {{
-          step.duration }}{% endif %}
+          {{ step.name }}{% if step.duration %}: {{ step.duration }}{% endif %}
         </div>
         <div>{{ step.content }}</div>
       </div>
